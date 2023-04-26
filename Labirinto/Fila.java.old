@@ -1,0 +1,199 @@
+import java.lang.reflect.Method;
+
+public class Fila <X> implements Cloneable
+{
+    private Object[] elemento;
+    private int capacidade;
+    private int posicaoInicial = 0;
+    public int ultimoNum = -1;
+
+    public Fila (int tamanho) throws Exception
+    {
+        if (tamanho <= 0)
+            throw new Exception("Tamanho inválido!");
+        
+        this.capacidade = tamanho;
+        this.elemento = new Object[tamanho];
+    }
+
+    public boolean isVazia ()
+    {
+        if(this.ultimoNum == -1)
+            return true;
+
+        return false;
+    }
+
+    public boolean isCheia ()
+    {
+        if(this.ultimoNum + 1 == this.elemento.length)
+            return true;
+
+        return false;
+    }
+
+    private void redimensioneSe(float porct)
+    {
+        Object[] novo = new Object[(int)Math.ceil(this.elemento.length * porct)];
+
+        for(int i = 0 ; i < this.elemento.length ; i++ )
+        {
+            novo[i] = this.elemento[i];
+        }
+
+        this.elemento = novo;
+    }
+
+    public void guardeUmItem (X x) throws Exception
+    {
+        if (x == null)
+            throw new Exception ("Falta o que guardar");
+
+        if (this.isCheia())
+            this.redimensioneSe (2.0F);
+
+        this.ultimoNum++;
+
+        if (x instanceof Cloneable)
+            this.elemento[this.ultimoNum] = meuCloneDeX(x);
+        else
+            this.elemento[this.ultimoNum] = x;
+
+    }
+
+    public X recupereUmItem () throws Exception
+    {
+        if (this.ultimoNum == -1)
+            throw new Exception ("Nada a recuperar");
+
+        X ret = null;
+
+        if (this.elemento[this.posicaoInicial] instanceof Cloneable)
+            ret = meuCloneDeX((X)this.elemento[this.posicaoInicial]);
+        else
+            ret = (X)this.elemento[this.posicaoInicial];
+
+        return ret;
+    }
+
+    public void removaUmItem () throws Exception
+    {
+        if (this.ultimoNum == -1)
+            throw new Exception ("Nada a remover");
+
+        this.elemento[this.posicaoInicial] = null;
+        for(int i = 0; i < this.elemento.length - 1; i++){
+            elemento[i] = elemento[i + 1];
+        }
+
+        if (this.elemento.length > this.capacidade && this.ultimoNum <= Math.round(this.elemento.length * 0.25F))
+            this.redimensioneSe (0.5F);
+    }
+
+    private X meuCloneDeX(X x)
+    {
+        X ret  = null;
+
+        try
+        {
+			Class<?> classe = x.getClass();
+			Class<?>[] tipoDosParms = null;
+			Method metodo = classe.getMethod("clone", tipoDosParms);
+			Object[] parms = null;
+			ret = (X)metodo.invoke(x, parms);
+        }
+        catch(Exception erro)
+        {}
+        
+        return ret;
+    }
+
+    public Fila (Fila<X> modelo) throws Exception
+    {
+        if(modelo == null)
+            throw new Exception("Modelo ausente");
+
+        this.posicaoInicial = modelo.posicaoInicial;
+        this.ultimoNum = modelo.ultimoNum;
+
+        this.elemento = new Object[modelo.elemento.length];
+
+        for(int i = 0; i < modelo.elemento.length; i++)
+            this.elemento[i] = modelo.elemento[i];
+    }
+
+    @Override
+    public Object clone()
+    {
+        Fila<X> ret = null;
+
+        try
+        {
+            ret = new Fila(this);
+        }
+        catch(Exception erro)
+        {}
+
+        return ret;
+    }
+
+    @Override
+    public String toString()
+    {
+
+        String temp = "Fila<";
+        for (int i = 0; i < elemento.length; i++) {
+            temp += elemento[i]+";";
+        }
+        temp += ">";
+        return temp;
+        /*
+        String ret = this.posicaoInicial + " é o primeiro elemento";
+
+        if (this.ultimoNum != -1)
+            ret += ", sendo o primeiro " + this.elemento[this.posicaoInicial];
+            
+        return ret;*/
+    }
+
+    @Override
+    public boolean equals (Object obj)
+    {
+        if(this == obj)
+            return true;
+
+        if(obj == null)
+            return false;
+
+        if(this.getClass() != obj.getClass())
+            return false;
+
+        Fila<X> fila = (Fila<X>) obj;
+
+        if(this.posicaoInicial != fila.posicaoInicial)
+            return false;
+
+        for(int i = 0; i < this.elemento.length; i++)
+            if(!this.elemento[i].equals (fila.elemento[i]))
+                return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode ()
+    {
+        int ret = 666/*qualquer positivo*/;
+
+        //ret = ret*7/*primo*/ + new Integer(this.ultimo).hashCode();
+        ret = ret*7/*primo*/ + Integer.valueOf(this.ultimoNum).hashCode();
+
+        for (int i = 0; i < this.ultimoNum; i++)
+            ret = ret*7/*primo*/ + this.elemento[i].hashCode();
+
+        if (ret < 0)
+            ret = -ret;
+
+        return ret;
+    }    
+}
